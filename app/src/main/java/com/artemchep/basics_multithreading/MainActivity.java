@@ -1,6 +1,7 @@
 package com.artemchep.basics_multithreading;
 
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 
 import androidx.annotation.UiThread;
@@ -10,6 +11,9 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.artemchep.basics_multithreading.cipher.CipherUtil;
+import com.artemchep.basics_multithreading.cipher.CypherManager;
+import com.artemchep.basics_multithreading.cipher.CypherTask;
+import com.artemchep.basics_multithreading.cipher.ICypher;
 import com.artemchep.basics_multithreading.domain.Message;
 import com.artemchep.basics_multithreading.domain.WithMillis;
 
@@ -22,6 +26,8 @@ public class MainActivity extends AppCompatActivity {
 
     private MessageAdapter mAdapter = new MessageAdapter(mList);
 
+    private final CypherManager<CypherTask> manager = new CypherManager<>();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -32,6 +38,13 @@ public class MainActivity extends AppCompatActivity {
         recyclerView.setAdapter(mAdapter);
 
         showWelcomeDialog();
+        manager.start();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        manager.stop();
     }
 
     private void showWelcomeDialog() {
@@ -54,6 +67,18 @@ public class MainActivity extends AppCompatActivity {
         mList.add(message);
         mAdapter.notifyItemInserted(mList.size() - 1);
 
+        CypherTask task = new CypherTask(message.value.plainText, System.currentTimeMillis());
+        task.setCypherCallback(new ICypher() {
+            @Override
+            public void updateUICallback(String cypheredText, long executionTime) {
+                final Message messageNew = message.value.copy(cypheredText); // call with cyphered text
+                final WithMillis<Message> messageNewWithMillis = new WithMillis<>(messageNew, executionTime);  //call with elapsed time
+                update(messageNewWithMillis);
+            }
+        });
+        manager.postTask(task);
+
+        // final Message messageNew = message.value.copy(CipherUtil.encrypt(message.value.plainText));
         // TODO: Start processing the message (please use CipherUtil#encrypt(...)) here.
         //       After it has been processed, send it to the #update(...) method.
 
@@ -62,8 +87,8 @@ public class MainActivity extends AppCompatActivity {
 //        getWindow().getDecorView().postDelayed(new Runnable() {
 //            @Override
 //            public void run() {
-//                final Message messageNew = message.value.copy("sample :)");
-//                final WithMillis<Message> messageNewWithMillis = new WithMillis<>(messageNew, CipherUtil.WORK_MILLIS);
+//                final Message messageNew = message.value.copy("sample :)"); // call with cyphered text
+//                final WithMillis<Message> messageNewWithMillis = new WithMillis<>(messageNew, CipherUtil.WORK_MILLIS);  //call with elapsed time
 //                update(messageNewWithMillis);
 //            }
 //        }, CipherUtil.WORK_MILLIS);
