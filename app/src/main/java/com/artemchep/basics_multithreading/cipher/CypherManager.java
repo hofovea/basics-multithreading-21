@@ -9,14 +9,13 @@ import java.util.concurrent.SynchronousQueue;
 
 public class CypherManager<T extends Runnable> {
     private final Queue<T> tasksQueue = new LinkedList<>();
-    private boolean isRunning = true;
+    private volatile boolean isRunning = true;
     public void start() {
         Thread thread = new Thread(new Runnable() {
             @Override
-            public synchronized void run() {
+            public void run() {
                 while (isRunning) {
                     T task = getTask();
-                    tasksQueue.remove(task);
                     task.run();
                 }
             }
@@ -25,7 +24,7 @@ public class CypherManager<T extends Runnable> {
     }
 
     private synchronized T getTask() {
-        while (tasksQueue.isEmpty()) {
+        while (tasksQueue.isEmpty() && isRunning) {
             try {
                 Log.d("TAGGGGG", "run: I'm empty");
                 wait();
@@ -40,10 +39,11 @@ public class CypherManager<T extends Runnable> {
         boolean res = tasksQueue.offer(task);
         Log.d("TAGGGGG", "postTask: " + res);
         Log.d("TAGGGGG", "postTask: " + Thread.currentThread().getState().name());
-        //notifyAll();
         notify();
     }
-    public void stop() {
+
+    public synchronized void stop() {
         isRunning = false;
+        notify();
     }
 }
