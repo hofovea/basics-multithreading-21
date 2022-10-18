@@ -1,6 +1,7 @@
 package com.artemchep.basics_multithreading;
 
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.View;
 
@@ -67,7 +68,7 @@ public class MainActivity extends AppCompatActivity {
         mList.add(message);
         mAdapter.notifyItemInserted(mList.size() - 1);
 
-        CypherTask task = new CypherTask(message.value.plainText, System.currentTimeMillis());
+        CypherTask task = new CypherTask(message.value.plainText, SystemClock.elapsedRealtime());
         task.setCypherCallback(new ICypher() {
             @Override
             public void updateUICallback(String cypheredText, long executionTime) {

@@ -3,6 +3,7 @@ package com.artemchep.basics_multithreading.cipher;
 import android.icu.text.SymbolTable;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.SystemClock;
 import android.util.Log;
 
 public class CypherTask implements Runnable{
@@ -24,7 +25,7 @@ public class CypherTask implements Runnable{
     public void run() {
         Log.d("TAGGGGG", "updateUICallback: " + Thread.currentThread().getName());
         final String cypheredText = CipherUtil.encrypt(textToCypher);
-        final long resultTime = System.currentTimeMillis() - startTime;
+        final long resultTime = SystemClock.elapsedRealtime() - startTime;
         mainHandler.post(new Runnable() {
             @Override
             public void run() {
